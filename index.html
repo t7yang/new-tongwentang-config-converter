@@ -17,7 +17,7 @@
     <div class="hero-body">
       <div class="container">
         <h1 class="title">
-          新同文堂
+          Firefox 新同文堂
         </h1>
         <h2 class="subtitle">
           過濾網址與轉換詞彙設定檔舊轉新
@@ -27,6 +27,31 @@
   </section>
   <section class="section hero is-light">
     <div class="container">
+      <h1 class="title">請務必提供才能合併</h1>
+      <div class="notification is-danger">
+        <p>請替換 list 的陣列中</p>
+        <code>"urlFilter": { "list": [] }</code>
+      </div>
+      <div class="columns">
+        <div class="column">
+          <div class="field">
+            <label class="label">Firefox 現有新版設定檔</label>
+            <p class="control">
+              <textarea id="rawFirefox"
+                        class="textarea"></textarea>
+            </p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="field">
+            <label class="label">Chrome 現有新版設定檔</label>
+            <p class="control">
+              <textarea id="rawChrome"
+                        class="textarea"></textarea>
+            </p>
+          </div>
+        </div>
+      </div>
       <div class="columns">
         <div class="column">
           <h1 class="title">過濾網址</h1>
@@ -39,20 +64,6 @@
                           rows="30"
                           placeholder="tongwen_filter.txt 全選複製貼上"></textarea>
               </p>
-            </div>
-            <button class="button is-fullwidth is-warning"
-                    onclick="convertFilter()">轉換</button>
-            <div class="field">
-              <label class="label">轉換結果</label>
-              <p class="control">
-                <textarea id="transformFilter"
-                          class="textarea"
-                          placeholder=""></textarea>
-              </p>
-            </div>
-            <div class="notification is-danger">
-              <p>請替換 list 的陣列中</p>
-              <code>"urlFilter": { "list": [] }</code>
             </div>
           </div>
         </div>
@@ -67,20 +78,40 @@
                           placeholder="tongwen.xml 全選複製貼上"></textarea>
               </p>
             </div>
-            <button class="button is-fullwidth is-warning"
-                    onclick="convertPhases()">轉換</button>
-            <div class="field">
-              <label class="label">轉換結果</label>
-              <p class="control">
-                <textarea id="transformPhases"
-                          class="textarea"
-                          placeholder=""></textarea>
-              </p>
-            </div>
-            <div class="notification is-danger">
-              <p>請替換 "simp" 和 "trad" 的物件</p>
-              <code>"userPhrase": { "simp": {}, "trad": {} }</code>
-            </div>
+          </div>
+        </div>
+      </div>
+      <div class="columns">
+        <div class="column">
+          <button class="button is-fullwidth is-warning"
+                  onclick="combineFirefox()">產生合併後的 Firefox 設定檔</button>
+          <div class="field">
+            <label class="label">合併後新 Firefox 設定檔</label>
+            <p class="control">
+              <textarea id="newFirefox"
+                        class="textarea"
+                        placeholder=""></textarea>
+            </p>
+          </div>
+          <div class="notification is-danger">
+            <p>請替換 list 的陣列中</p>
+            <code>"urlFilter": { "list": [] }</code>
+          </div>
+        </div>
+        <div class="column">
+          <button class="button is-fullwidth is-warning"
+                  onclick="combineChrome()">產生合併後的 Chrome 設定檔</button>
+          <div class="field">
+            <label class="label">合併後新 Chrome 設定檔</label>
+            <p class="control">
+              <textarea id="newChrome"
+                        class="textarea"
+                        placeholder=""></textarea>
+            </p>
+          </div>
+          <div class="notification is-danger">
+            <p>請替換 "simp" 和 "trad" 的物件</p>
+            <code>"userPhrase": { "simp": {}, "trad": {} }</code>
           </div>
         </div>
       </div>
@@ -103,26 +134,40 @@
         defer
         src="https://buttons.github.io/buttons.js"></script>
 <script>
-  const transformFilter = document.querySelector('#transformFilter');
-  const transformPhases = document.querySelector('#transformPhases');
-  function convertFilter() {
-    const rawFilter = document.querySelector('#rawFilter').value;
+  const newFirefox = document.querySelector('#newFirefox');
+  const newChrome = document.querySelector('#newChrome');
 
-    const rawRules = rawFilter.split('\n');
-    const rules = rawRules
+  function convertFilter(rawFilter, isChrome) {
+    const rawConfig = rawFilter.split('\n');
+    const newConfig = rawConfig
       .filter(raw => raw.length > 0)
       .map(raw => {
-        const [url, zhflag] = raw.split('	');
-        return { url, zhflag: zhflag || 'none' };
-      });
-    const formatRules = JSON.stringify(rules, null, 2);
+        const [url, action] = raw.split('	');
 
-    transformFilter.innerHTML = formatRules;
+        if (isChrome) {
+          return { url, zhflag: action || 'none' };
+        }
+        else {
+          return {
+            url, action: (() => {
+              switch (action) {
+                case 'trad':
+                  return 2;
+                case 'simp':
+                  return 3;
+                default:
+                  return 0;
+              }
+            })()
+          };
+        }
+      });
+
+    return newConfig;
+
   }
 
-  function convertPhases() {
-    const rawPhases = document.querySelector('#rawPhases').value;
-
+  function convertPhases(rawPhases) {
     const rawSimplified = rawPhases.split('\n').reduce((curr, next) => {
       if (next.trim() === '</simplified>') {
         curr.start = false;
@@ -179,9 +224,38 @@
       return Object.assign(curr, next);
     }, {});
 
-    const formatPhases = JSON.stringify({ simp: simplified, trad: traditional }, null, 2);
+    return { simplified, traditional };
+  }
 
-    transformPhases.innerHTML = formatPhases;
+  function combineFirefox() {
+    const rawFirefox = JSON.parse(document.querySelector('#rawFirefox').value);
+    const rawFilter = document.querySelector('#rawFilter').value;
+    const rawPhases = document.querySelector('#rawPhases').value;
+
+    const newFilter = convertFilter(rawFilter, false);
+    rawFirefox.urlFilterList = [...rawFirefox.urlFilterList, ...newFilter];
+
+    const newPhases = convertPhases(rawPhases);
+    rawFirefox.userPhraseSimpList = Object.assign({}, rawFirefox.userPhraseSimpList, newPhases.simplified);
+    rawFirefox.userPhraseTradList = Object.assign({}, rawFirefox.userPhraseSimpList, newPhases.traditional);
+
+    newFirefox.innerHTML = JSON.stringify(rawFirefox, null, 2);
+  }
+
+  function combineChrome() {
+    const rawChrome = JSON.parse(document.querySelector('#rawChrome').value);
+    const rawFilter = document.querySelector('#rawFilter').value;
+    const rawPhases = document.querySelector('#rawPhases').value;
+    console.log(rawPhases);
+
+    const newFilter = convertFilter(rawFilter, true);
+    rawChrome.urlFilter.list = [...rawChrome.urlFilter.list, ...newFilter];
+
+    const newPhases = convertPhases(rawPhases);
+    rawChrome.userPhrase.simp = Object.assign({}, rawChrome.userPhrase.simp, newPhases.simplified);
+    rawChrome.userPhrase.trad = Object.assign({}, rawChrome.userPhrase.trad, newPhases.traditional);
+
+    newChrome.innerHTML = JSON.stringify(rawChrome, null, 2);
   }
 
 </script>
