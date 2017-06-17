@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible"
+        content="ie=edge">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.2/css/bulma.min.css">
+  <title>Document</title>
+</head>
+
+<body>
+  <section class="hero is-info is-small">
+    <div class="hero-body">
+      <div class="container">
+        <h1 class="title">
+          新同文堂
+        </h1>
+        <h2 class="subtitle">
+          過濾網址與轉換詞彙設定檔舊轉新
+        </h2>
+      </div>
+    </div>
+  </section>
+  <section class="section hero is-light">
+    <div class="container">
+      <div class="columns">
+        <div class="column">
+          <h1 class="title">過濾網址</h1>
+          <div class="content">
+            <div class="field">
+              <label class="label">請貼上過濾網址設定</label>
+              <p class="control">
+                <textarea id="rawFilter"
+                          class="textarea"
+                          rows="30"
+                          placeholder="tongwen_filter.txt 全選複製貼上"></textarea>
+              </p>
+            </div>
+            <button class="button is-fullwidth is-warning"
+                    onclick="convertFilter()">轉換</button>
+            <div class="field">
+              <label class="label">轉換結果</label>
+              <p class="control">
+                <textarea id="transformFilter"
+                          class="textarea"
+                          placeholder=""></textarea>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <h1 class="title">轉換詞彙</h1>
+          <div class="content">
+            <div class="field">
+              <label class="label">請貼上轉換詞彙設定</label>
+              <p class="control">
+                <textarea id="rawPhases"
+                          class="textarea"
+                          placeholder="tongwen.xml 全選複製貼上"></textarea>
+              </p>
+            </div>
+            <button class="button is-fullwidth is-warning"
+                    onclick="convertPhases()">轉換</button>
+            <div class="field">
+              <label class="label">轉換結果</label>
+              <p class="control">
+                <textarea id="transformPhases"
+                          class="textarea"
+                          placeholder=""></textarea>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <footer class="footer">
+    <div class="container">
+      <nav class="level">
+        <div class="level-item has-text-centered">
+          <div>
+            <p class="heading">作者</p>
+            <p class="title">t7yang</p>
+          </div>
+        </div>
+        <div class="level-item has-text-centered">
+          <div>
+            <p class="heading">github</p>
+            <p class="title"><a href="">t7yang</a></p>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </footer>
+</body>
+<script>
+  const transformFilter = document.querySelector('#transformFilter');
+  const transformPhases = document.querySelector('#transformPhases');
+  function convertFilter() {
+    const rawFilter = document.querySelector('#rawFilter').value;
+
+    const rawRules = rawFilter.split('\n');
+    const rules = rawRules
+      .filter(raw => raw.length > 0)
+      .map(raw => {
+        const [url, zhflag] = raw.split('	');
+        return { url, zhflag: zhflag || 'none' };
+      });
+    const formatRules = JSON.stringify({ list: rules }, null, 2);
+    console.log(formatRules);
+
+    transformFilter.innerHTML = formatRules;
+  }
+
+  function convertPhases() {
+    const rawPhases = document.querySelector('#rawPhases').value;
+
+    const rawSimplified = rawPhases.split('\n').reduce((curr, next) => {
+      if (next.trim() === '</simplified>') {
+        curr.start = false;
+        return curr;
+      }
+
+      if (next.trim() === '<simplified>') {
+        curr.start = true;
+        return curr;
+      }
+
+      if (curr.start) {
+        curr.content.push(next.trim());
+        return curr;
+      }
+
+      return curr;
+    }, { start: false, end: false, content: [] });
+
+    const simplified = rawSimplified.content.map(item => {
+      const target = item.match(/<s>(.+)<\/s>/)[1];
+      const result = item.match(/<r>(.+)<\/r>/)[1];
+
+      return { [target]: result };
+    }).reduce((curr, next) => {
+      return Object.assign(curr, next);
+    }, {});
+
+    const rawTraditional = rawPhases.split('\n').reduce((curr, next) => {
+      if (next.trim() === '</traditional>') {
+        curr.start = false;
+        return curr;
+      }
+
+      if (next.trim() === '<traditional>') {
+        curr.start = true;
+        return curr;
+      }
+
+      if (curr.start) {
+        curr.content.push(next.trim());
+        return curr;
+      }
+
+      return curr;
+    }, { start: false, end: false, content: [] });
+
+    const traditional = rawTraditional.content.map(item => {
+      const target = item.match(/<s>(.+)<\/s>/)[1];
+      const result = item.match(/<r>(.+)<\/r>/)[1];
+
+      return { [target]: result };
+    }).reduce((curr, next) => {
+      return Object.assign(curr, next);
+    }, {});
+
+    const formatPhases = JSON.stringify({ simp: simplified, trad: traditional }, null, 2);
+
+    transformPhases.innerHTML = formatPhases;
+  }
+
+</script>
+
+</html>
