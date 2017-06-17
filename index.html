@@ -50,6 +50,10 @@
                           placeholder=""></textarea>
               </p>
             </div>
+            <div class="notification is-danger">
+              <p>請替換 list 的陣列中</p>
+              <code>"urlFilter": { "list": [] }</code>
+            </div>
           </div>
         </div>
         <div class="column">
@@ -72,6 +76,10 @@
                           class="textarea"
                           placeholder=""></textarea>
               </p>
+            </div>
+            <div class="notification is-danger">
+              <p>請替換 "simp" 和 "trad" 的物件</p>
+              <code>"userPhrase": { "simp": {}, "trad": {} }</code>
             </div>
           </div>
         </div>
@@ -107,8 +115,7 @@
         const [url, zhflag] = raw.split('	');
         return { url, zhflag: zhflag || 'none' };
       });
-    const formatRules = JSON.stringify({ list: rules }, null, 2);
-    console.log(formatRules);
+    const formatRules = JSON.stringify(rules, null, 2);
 
     transformFilter.innerHTML = formatRules;
   }
