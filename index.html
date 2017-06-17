@@ -29,8 +29,17 @@
     <div class="container">
       <h1 class="title">請務必提供才能合併</h1>
       <div class="notification is-danger">
-        <p>請替換 list 的陣列中</p>
-        <code>"urlFilter": { "list": [] }</code>
+        <p>設定檔取得方式：</p>
+        <ul>
+          <li>Firefox</li>
+          <ul>
+            <li>目前只能自己去找profiles/browser-extension-data/tongwen@softcup/storage.js</li>
+          </ul>
+          <li>Chrome</li>
+          <ul>
+            <li>套件直接匯出設定檔</li>
+          </ul>
+        </ul>
       </div>
       <div class="columns">
         <div class="column">
@@ -94,8 +103,7 @@
             </p>
           </div>
           <div class="notification is-danger">
-            <p>請替換 list 的陣列中</p>
-            <code>"urlFilter": { "list": [] }</code>
+            <p>Firefox：覆寫 storage.js</p>
           </div>
         </div>
         <div class="column">
@@ -110,8 +118,7 @@
             </p>
           </div>
           <div class="notification is-danger">
-            <p>請替換 "simp" 和 "trad" 的物件</p>
-            <code>"userPhrase": { "simp": {}, "trad": {} }</code>
+            <p>Chrome：透過套件匯入新的設定檔</p>
           </div>
         </div>
       </div>
