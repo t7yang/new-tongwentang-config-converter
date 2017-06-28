@@ -7,10 +7,9 @@
   - tongwen_filter.txt
   - tongwen.xml
 - 取得現有新版本的設定檔
-  - Firefox: 目前只能自己去找`profiles/browser-extension-data/tongwen@softcup/storage.js`
-  - chrome: `套件直接匯出設定檔`
+  - Firefox: 套件直接匯出設定檔（v1.4+）
+  - chrome: 套件直接匯出設定檔
 - 把上述的設定檔貼到對應的欄位中
 - 根據你的瀏覽器選擇產生新的設定檔
 - 寫入新的設定檔
-  - Firefox：覆寫 `storage.js`
-  - Chrome：透過套件匯入新的設定檔
+  - 透過套件匯入新的設定檔
