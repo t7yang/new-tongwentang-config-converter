@@ -25,6 +25,48 @@
       </div>
     </div>
   </section>
+  <section class="section hero is-primary">
+    <div class="hero-body">
+      <div class="container">
+        <h1 class="title">
+          Firefox Chrome 設定檔互轉
+        </h1>
+        <div class="columns">
+          <div class="column">
+            <button class="button is-fullwidth is-warning"
+                    onclick="transform2Chrome()">轉換成 Chrome 設定檔</button>
+            <div class="field">
+              <label class="label">Firefox 設定檔</label>
+              <p class="control">
+                <textarea id="firefoxPrefs"
+                          class="textarea"
+                          placeholder=""></textarea>
+              </p>
+            </div>
+          </div>
+          <div class="column">
+            <button class="button is-fullwidth is-warning"
+                    onclick="transform2Firefox()">轉換成 Chrome 設定檔</button>
+            <div class="field">
+              <label class="label">Chrome 設定檔</label>
+              <p class="control">
+                <textarea id="chromePrefs"
+                          class="textarea"
+                          placeholder=""></textarea>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="columns">
+          <div class="column">
+            <div class="notification is-danger">
+              <p>注意：因為兩者的資料格式不相容，因此轉換過程中會產生一點點的資料遺失。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
   <section class="section hero is-light">
     <div class="container">
       <h1 class="title">請務必提供才能合併</h1>
@@ -263,6 +305,132 @@
     rawChrome.userPhrase.trad = Object.assign({}, rawChrome.userPhrase.trad, newPhases.traditional);
 
     newChrome.innerHTML = JSON.stringify(rawChrome, null, 2);
+  }
+
+  function transform2Chrome() {
+    let fprefs;
+    let cPrefs;
+    try {
+      fPrefs = JSON.parse(document.querySelector('#firefoxPrefs').value);
+      cPrefs = document.querySelector('#chromePrefs');
+    } catch (error) {
+      alert('設定檔解析錯誤，請確保貼上的設定檔格式是正確的！');
+    }
+
+    const transformed = {
+      autoConvert: fPrefs.autoConvert === 2 ? 'trad' : fPrefs.autoConvert === 3 ? 'simp' : 'none',
+      contextMenu: { enable: fPrefs.contextMenuEnabled ? true : false },
+      fontCustom: {
+        enable: fPrefs.fontCustomEnabled ? true : false,
+        simp: fPrefs.fontCustomSimp,
+        trad: fPrefs.fontCustomTrad,
+      },
+      iconAction: fPrefs.iconAction === 2 ? 'trad' : fPrefs.iconAction === 3 ? 'simp' : 'auto',
+      inputConvert: fPrefs.inputConvert === 1 ? 'auto' : fPrefs.inputConvert === 2 ? 'trad' : fPrefs.inputConvert === 3 ? 'simp' : 'none',
+      symConvert: fPrefs.symConvert,
+      symbolS2T: {
+        "·": "‧",
+        "―": "─",
+        "‖": "∥",
+        "‘": "『",
+        "’": "』",
+        "“": "「",
+        "”": "」",
+        "″": "〞",
+        "∏": "Π",
+        "∑": "Σ",
+        "∧": "︿",
+        "∨": "﹀",
+        "∶": "︰",
+        "≈": "≒",
+        "≤": "≦",
+        "≥": "≧",
+        "━": "─",
+        "┃": "│",
+        "┏": "┌",
+        "┓": "┐",
+        "┗": "└",
+        "┛": "┘",
+        "┣": "├",
+        "┫": "┤",
+        "┳": "┬",
+        "┻": "┴",
+        "╋": "┼",
+        "〖": "【",
+        "〗": "】"
+      },
+      symbolT2S: {
+        "¯": "ˉ",
+        "‥": "¨",
+        "‧": "·",
+        "‵": "｀",
+        "≒": "≈",
+        "≦": "≤",
+        "≧": "≥",
+        "╱": "／",
+        "╲": "＼",
+        "╴": "＿",
+        "「": "“",
+        "」": "”",
+        "『": "‘",
+        "』": "’"
+      },
+      urlFilter: {
+        enable: fPrefs.urlFilterEnabled,
+        list: fPrefs.urlFilterList.map(url => ({
+          url: url.url,
+          zhflag: url.action === 2 ? 'trad' : url.action === 3 ? 'simp' : 'none'
+        })),
+      },
+      userPhrase: {
+        enable: fPrefs.userPhraseEnable,
+        simp: fPrefs.userPhraseSimpList,
+        trad: fPrefs.userPhraseTradList,
+      },
+      version: fPrefs.version.toString(),
+    };
+
+    cPrefs.textContent = JSON.stringify(transformed, null, 2);
+  }
+
+  function transform2Firefox() {
+    let cPrefs;
+    let fprefs;
+    try {
+      cPrefs = JSON.parse(document.querySelector('#chromePrefs').value);
+      fPrefs = document.querySelector('#firefoxPrefs');
+    } catch (error) {
+      alert('設定檔解析錯誤，請確保貼上的設定檔格式是正確的！');
+    }
+
+    const transformed = {
+      autoConvert: cPrefs.autoConvert === 'trad' ? 2 : cPrefs.autoConvert === 'simp' ? 3 : 0,
+      contextMenuClip2Simp: true,
+      contextMenuClip2Trad: true,
+      contextMenuEnabled: cPrefs.contextMenu.enable,
+      contextMenuInput2Simp: true,
+      contextMenuInput2Trad: true,
+      contextMenuPage2Simp: true,
+      contextMenuPage2Trad: true,
+      fontCustomEnabled: cPrefs.fontCustom.enable,
+      fontCustomSimp: cPrefs.fontCustom.simp,
+      fontCustomTrad: cPrefs.fontCustom.trad,
+      iconAction: cPrefs.iconAction === 'trad' ? 2 : cPrefs.iconAction === 'simp' ? 3 : 1,
+      inputConvert: cPrefs.inputConvert === 'auto' ? 1 : cPrefs.inputConvert === 'trad' ? 2 : cPrefs.inputConvert === 'simp' ? 3 : 0,
+      symConvert: cPrefs.symConvert,
+      urlFilterEnabled: cPrefs.urlFilter.enable,
+      urlFilterList: cPrefs.urlFilter.list.map(url => ({
+        url: url.url,
+        action: url.zhflag === 'trad' ? 2 : url.zhflag === 'simp' ? 3 : 0
+      })),
+      userPhraseEnable: cPrefs.userPhrase.enable,
+      userPhraseSimpList: cPrefs.userPhrase.simp,
+      userPhraseTradList: cPrefs.userPhrase.trad,
+      version: +cPrefs.version,
+    };
+
+    fPrefs.textContent = JSON.stringify(transformed, null, 2);
+    fPrefs = null;
   }
 
 </script>
